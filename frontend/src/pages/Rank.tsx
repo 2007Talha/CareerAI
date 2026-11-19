@@ -26,49 +26,22 @@ function RankTopStats({ cohortRank, cohortSize, percentile, skillCount }: StatsP
   return (
     <div className="grid-4" style={{ marginBottom: 28 }}>
       <div className="stat-card-modern" style={{ background: 'linear-gradient(135deg, rgba(239, 246, 255, 0.7) 0%, rgba(240, 249, 255, 0.95) 100%)', borderColor: 'rgba(191, 219, 254, 0.6)' }}>
-        <div className="stat-card-top">
-          <div className="stat-card-badge">
-            <div className="stat-icon-wrapper blue" style={{ borderRadius: 12 }}><Trophy size={18} /></div>
-            <span className="stat-label-text" style={{ color: '#3b82f6' }}>COHORT RANK</span>
-          </div>
-          <ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#3b82f6' }} />
-        </div>
+        <div className="stat-card-top"><div className="stat-card-badge"><div className="stat-icon-wrapper blue" style={{ borderRadius: 12 }}><Trophy size={18} /></div><span className="stat-label-text" style={{ color: '#3b82f6' }}>COHORT RANK</span></div><ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#3b82f6' }} /></div>
         <div className="stat-value-large">#{cohortRank}</div>
         <div className="stat-footer-text" style={{ color: '#64748b' }}>of {cohortSize} students</div>
       </div>
-
       <div className="stat-card-modern" style={{ background: 'linear-gradient(135deg, rgba(236, 253, 245, 0.7) 0%, rgba(240, 253, 250, 0.95) 100%)', borderColor: 'rgba(167, 243, 208, 0.6)' }}>
-        <div className="stat-card-top">
-          <div className="stat-card-badge">
-            <div className="stat-icon-wrapper green" style={{ borderRadius: 12 }}><Users size={18} /></div>
-            <span className="stat-label-text" style={{ color: '#10b981' }}>PERCENTILE</span>
-          </div>
-          <ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#10b981' }} />
-        </div>
+        <div className="stat-card-top"><div className="stat-card-badge"><div className="stat-icon-wrapper green" style={{ borderRadius: 12 }}><Users size={18} /></div><span className="stat-label-text" style={{ color: '#10b981' }}>PERCENTILE</span></div><ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#10b981' }} /></div>
         <div className="stat-value-large" style={{ color: '#059669' }}>{Math.round(percentile)}th</div>
         <div className="stat-footer-text" style={{ color: '#059669', fontWeight: 600 }}>Better than {Math.round(percentile)}% of peers</div>
       </div>
-
       <div className="stat-card-modern" style={{ background: 'linear-gradient(135deg, rgba(255, 247, 237, 0.7) 0%, rgba(254, 243, 199, 0.95) 100%)', borderColor: 'rgba(254, 215, 170, 0.6)' }}>
-        <div className="stat-card-top">
-          <div className="stat-card-badge">
-            <div className="stat-icon-wrapper orange" style={{ borderRadius: 12 }}><GraduationCap size={18} /></div>
-            <span className="stat-label-text" style={{ color: '#f97316' }}>SKILLS</span>
-          </div>
-          <ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#f97316' }} />
-        </div>
+        <div className="stat-card-top"><div className="stat-card-badge"><div className="stat-icon-wrapper orange" style={{ borderRadius: 12 }}><GraduationCap size={18} /></div><span className="stat-label-text" style={{ color: '#f97316' }}>SKILLS</span></div><ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#f97316' }} /></div>
         <div className="stat-value-large" style={{ color: '#d97706' }}>{skillCount}</div>
         <div className="stat-footer-text" style={{ color: '#64748b' }}>identified</div>
       </div>
-
       <div className="stat-card-modern" style={{ background: 'linear-gradient(135deg, rgba(245, 243, 255, 0.7) 0%, rgba(238, 242, 255, 0.95) 100%)', borderColor: 'rgba(221, 214, 254, 0.6)' }}>
-        <div className="stat-card-top">
-          <div className="stat-card-badge">
-            <div className="stat-icon-wrapper purple" style={{ borderRadius: 12 }}><Target size={18} /></div>
-            <span className="stat-label-text" style={{ color: '#8b5cf6' }}>TOP CAREER</span>
-          </div>
-          <ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#8b5cf6' }} />
-        </div>
+        <div className="stat-card-top"><div className="stat-card-badge"><div className="stat-icon-wrapper purple" style={{ borderRadius: 12 }}><Target size={18} /></div><span className="stat-label-text" style={{ color: '#8b5cf6' }}>TOP CAREER</span></div><ArrowUpRight size={18} className="stat-corner-arrow" style={{ color: '#8b5cf6' }} /></div>
         <div className="stat-value-career" style={{ color: '#1e1b4b' }}>Software Engineer</div>
         <div className="stat-footer-text" style={{ color: '#059669', fontWeight: 600 }}>91% fit</div>
       </div>
@@ -142,29 +115,15 @@ function RankBreakdownCard({ ranking }: BreakdownProps) {
   return (
     <div className="card" style={{ minHeight: 390 }}>
       <div className="card-header">
-        <div>
-          <div className="card-title">Score Breakdown</div>
-          <div className="card-subtitle">Which areas contribute most</div>
-        </div>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
-          <Zap size={18} />
-        </div>
+        <div><div className="card-title">Score Breakdown</div><div className="card-subtitle">Which areas contribute most</div></div>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}><Zap size={18} /></div>
       </div>
-
       <div className="breakdown-list" style={{ marginTop: 12, gap: 18 }}>
         {items.map((item) => (
           <div key={item.id} className="breakdown-item" style={{ alignItems: 'center' }}>
-            <div className="breakdown-lead" style={{ width: 170, minWidth: 170 }}>
-              <span className="breakdown-label" style={{ fontSize: '0.84rem' }}>
-                {item.name} <span style={{ color: '#94a3b8', fontWeight: 500 }}>({item.weight})</span>
-              </span>
-            </div>
-            <div className="breakdown-bar-track" style={{ height: 8 }}>
-              <div className="breakdown-bar-fill" style={{ width: `${Math.min(100, Math.max(2, item.score))}%`, backgroundColor: item.color }} />
-            </div>
-            <div className="breakdown-score" style={{ width: 44, minWidth: 44, textAlign: 'right', fontWeight: 700 }}>
-              {item.score.toFixed(1)}
-            </div>
+            <div className="breakdown-lead" style={{ width: 170, minWidth: 170 }}><span className="breakdown-label" style={{ fontSize: '0.84rem' }}>{item.name} <span style={{ color: '#94a3b8', fontWeight: 500 }}>({item.weight})</span></span></div>
+            <div className="breakdown-bar-track" style={{ height: 8 }}><div className="breakdown-bar-fill" style={{ width: `${Math.min(100, Math.max(2, item.score))}%`, backgroundColor: item.color }} /></div>
+            <div className="breakdown-score" style={{ width: 44, minWidth: 44, textAlign: 'right', fontWeight: 700 }}>{item.score.toFixed(1)}</div>
           </div>
         ))}
       </div>

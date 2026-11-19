@@ -61,7 +61,6 @@ export default function Header({ userName }: HeaderProps) {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
   const displayName = userName || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
 
   const handleLogout = async () => {
@@ -75,28 +74,15 @@ export default function Header({ userName }: HeaderProps) {
         <Search className="search-icon" size={17} />
         <input type="text" placeholder="Search anything..." className="search-input" />
       </div>
-
       <div className="header-actions">
-        <button className="header-icon-btn" aria-label="Notifications">
-          <Bell size={20} />
-          <span className="notification-dot" />
-        </button>
-
+        <button className="header-icon-btn" aria-label="Notifications"><Bell size={20} /><span className="notification-dot" /></button>
         <div style={{ position: 'relative' }}>
           <div className="header-user-profile" onClick={() => setDropdownOpen(!dropdownOpen)}>
-            <div className="user-avatar">
-              <span className="user-avatar-fallback">{displayName.charAt(0).toUpperCase()}</span>
-            </div>
+            <div className="user-avatar"><span className="user-avatar-fallback">{displayName.charAt(0).toUpperCase()}</span></div>
             <span className="user-name">{displayName}</span>
             <ChevronDown size={16} className="user-dropdown-arrow" />
           </div>
-
-          {dropdownOpen && (
-            <UserDropdownMenu
-              onProfile={() => { setDropdownOpen(false); navigate('/profile'); }}
-              onLogout={() => { setDropdownOpen(false); handleLogout(); }}
-            />
-          )}
+          {dropdownOpen && <UserDropdownMenu onProfile={() => { setDropdownOpen(false); navigate('/profile'); }} onLogout={() => { setDropdownOpen(false); handleLogout(); }} />}
         </div>
       </div>
     </header>

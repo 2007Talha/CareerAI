@@ -161,16 +161,65 @@ function CoachSidebarContext({ profile, careerName, ranking, suggestedQuestions,
  * @param props Props
  * @returns JSX Element
  */
-export default function Coach({ profile, selectedCareerId, ranking, careerMatches }: Props) {
-  const [messages, setMessages] = useState<CoachMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+function CoachInputBar({ input, setInput, onSend, loading, careerName }: { input: string; setInput: (s: string) => void; onSend: () => void; loading: boolean; careerName: string }) {
+  return (
+    <div style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', gap: 12 }}>
+      <input type="text" placeholder={`Ask anything about ${careerName}, closing gaps, or scoring...`} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); } }} disabled={loading} style={{ flex: 1, padding: '12px 18px', borderRadius: 9999, border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }} />
+      <button type="button" onClick={onSend} disabled={loading || !input.trim()} className="btn btn-primary" style={{ borderRadius: 9999, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
+        <span>Send</span> <Send size={15} />
+      </button>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+function CoachChatThread({ messages, loading, copiedIndex, onCopy, firstName, careerName, profile, suggestedQuestions, onSend }: { messages: CoachMessage[]; loading: boolean; copiedIndex: number | null; onCopy: (c: string, i: number) => void; firstName: string; careerName: string; profile: StudentProfile; suggestedQuestions: Question[]; onSend: (s: string) => void }) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20, background: '#fafcff' }}>
+      {messages.length === 0 && <CoachEmptyState firstName={firstName} careerName={careerName} profile={profile} suggestedQuestions={suggestedQuestions} onSelectPrompt={onSend} />}
+      {messages.map((msg, i) => <CoachMessageBubble key={i} msg={msg} index={i} copiedIndex={copiedIndex} onCopy={onCopy} />)}
+      {loading && <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px', background: '#ffffff', borderRadius: 18, border: '1px solid #e2e8f0', width: 'fit-content' }}><Loader2 size={16} className="animate-spin" color="#2563eb" /><span style={{ fontSize: '0.84rem', color: '#64748b' }}>AI Coach is consulting your benchmark data...</span></div>}
+      <div ref={messagesEndRef} />
+    </div>
+  );
+}
+
+function useCoachChat(profileId: string | undefined, careerId: string) {
+  const [messages, setMessages] = useState<CoachMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const sendMessage = async (text: string) => {
+    if (!profileId || !text || loading) return;
+    setLoading(true);
+    setMessages((prev) => [...prev, { role: 'user', content: text, created_at: new Date().toISOString() }]);
+    try {
+      const response = await sendCoachMessage(profileId, text, careerId);
+      if (response && response.history) setMessages(response.history);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'assistant', content: "I'm analyzing your profile against benchmarks. Ask about a specific skill or role gap!", created_at: new Date().toISOString() }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { messages, loading, sendMessage };
+}
+
+function CoachHeader({ careerName }: { careerName: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
+      <div><h1 className="page-title" style={{ margin: 0, fontSize: '1.85rem' }}>AI Career Coach</h1><p className="page-description" style={{ margin: 0 }}>Grounded guidance based on your empirical resume, skills, and target role.</p></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: '#ffffff', borderRadius: 9999, border: '1px solid #e2e8f0' }}><Target size={15} color="#2563eb" /><span style={{ fontSize: '0.82rem', color: '#64748b' }}>Target Role:</span><span style={{ fontSize: '0.84rem', fontWeight: 700 }}>{careerName}</span></div>
+    </div>
+  );
+}
+
+export default function Coach({ profile, selectedCareerId, ranking, careerMatches }: Props) {
+  const [input, setInput] = useState('');
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const { messages, loading, sendMessage } = useCoachChat(profile?.id, selectedCareerId);
 
   if (!profile) return null;
 
@@ -179,22 +228,11 @@ export default function Coach({ profile, selectedCareerId, ranking, careerMatche
   const firstName = profile.full_name ? profile.full_name.split(' ')[0] : 'there';
   const suggestedQuestions = getSuggestedQuestions(careerName);
 
-  const handleSend = async (messageText?: string) => {
-    const textToSend = messageText || input.trim();
-    if (!profile || !textToSend || loading) return;
-
+  const handleSend = (text?: string) => {
+    const toSend = text || input.trim();
+    if (!toSend) return;
     setInput('');
-    setLoading(true);
-    setMessages((prev) => [...prev, { role: 'user', content: textToSend, created_at: new Date().toISOString() }]);
-
-    try {
-      const response = await sendCoachMessage(profile.id, textToSend, selectedCareerId);
-      if (response && response.history) setMessages(response.history);
-    } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "I'm analyzing your profile against industry benchmarks. Ask about a specific skill, project, or role gap!", created_at: new Date().toISOString() }]);
-    } finally {
-      setLoading(false);
-    }
+    sendMessage(toSend);
   };
 
   const handleCopy = (content: string, i: number) => {
@@ -205,41 +243,12 @@ export default function Coach({ profile, selectedCareerId, ranking, careerMatche
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: 30 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <h1 className="page-title" style={{ margin: 0, fontSize: '1.85rem' }}>AI Career Coach</h1>
-          <p className="page-description" style={{ margin: 0 }}>Grounded guidance based on your empirical resume, skills, and target role.</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: '#ffffff', borderRadius: 9999, border: '1px solid #e2e8f0' }}>
-          <Target size={15} color="#2563eb" /> <span style={{ fontSize: '0.82rem', color: '#64748b' }}>Target Role:</span> <span style={{ fontSize: '0.84rem', fontWeight: 700 }}>{careerName}</span>
-        </div>
-      </div>
-
+      <CoachHeader careerName={careerName} />
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 20, alignItems: 'start' }}>
         <div className="card" style={{ padding: 0, borderRadius: 24, border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 220px)', minHeight: 560, overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20, background: '#fafcff' }}>
-            {messages.length === 0 && (
-              <CoachEmptyState firstName={firstName} careerName={careerName} profile={profile} suggestedQuestions={suggestedQuestions} onSelectPrompt={handleSend} />
-            )}
-            {messages.map((msg, i) => (
-              <CoachMessageBubble key={i} msg={msg} index={i} copiedIndex={copiedIndex} onCopy={handleCopy} />
-            ))}
-            {loading && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px', background: '#ffffff', borderRadius: 18, border: '1px solid #e2e8f0', width: 'fit-content' }}>
-                <Loader2 size={16} className="animate-spin" color="#2563eb" /> <span style={{ fontSize: '0.84rem', color: '#64748b' }}>AI Coach is consulting your benchmark data...</span>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', gap: 12 }}>
-            <input type="text" placeholder={`Ask anything about ${careerName}, closing gaps, or scoring...`} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} disabled={loading} style={{ flex: 1, padding: '12px 18px', borderRadius: 9999, border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }} />
-            <button type="button" onClick={() => handleSend()} disabled={loading || !input.trim()} className="btn btn-primary" style={{ borderRadius: 9999, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
-              <span>Send</span> <Send size={15} />
-            </button>
-          </div>
+          <CoachChatThread messages={messages} loading={loading} copiedIndex={copiedIndex} onCopy={handleCopy} firstName={firstName} careerName={careerName} profile={profile} suggestedQuestions={suggestedQuestions} onSend={handleSend} />
+          <CoachInputBar input={input} setInput={setInput} onSend={handleSend} loading={loading} careerName={careerName} />
         </div>
-
         <CoachSidebarContext profile={profile} careerName={careerName} ranking={ranking} suggestedQuestions={suggestedQuestions} onSelectPrompt={handleSend} />
       </div>
     </div>

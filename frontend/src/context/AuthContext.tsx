@@ -29,43 +29,46 @@ interface AuthContextType {
   getUserProfile: () => StudentProfile | null;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
-
-const LOCAL_STORAGE_USER_KEY = 'careerai_auth_user';
+const LOCAL_STORAGE_USER_KEY = 'careerai_mock_user';
 const LOCAL_STORAGE_PROFILE_KEY = 'careerai_student_profile';
-const LOCAL_STORAGE_USERS_DB = 'careerai_registered_users';
+const LOCAL_STORAGE_USERS_DB = 'careerai_registered_users_db';
 
-/**
- * Validates credentials against local storage mock DB.
- * @param email User email
- * @param pass User password
- * @returns Populated AuthUser
- */
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 function localMockLogin(email: string, pass: string): AuthUser {
-  const usersStr = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
-  const users: Record<string, { pass: string; name: string; uid: string }> = usersStr ? JSON.parse(usersStr) : {};
+  if (!email || !email.includes('@')) throw new Error('Please enter a valid email address');
+  if (!pass || pass.length < 6) throw new Error('Password must be at least 6 characters');
+
+  let users: Record<string, { pass: string; name: string; uid: string }> = {};
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
+    if (raw) users = JSON.parse(raw);
+  } catch {
+    // fallback
+  }
+
   const existing = users[email.toLowerCase()];
+  if (existing && existing.pass !== pass) throw new Error('Invalid email or password');
 
-  if (!existing) throw new Error('User not found. Please sign up first.');
-  if (existing.pass !== pass) throw new Error('Invalid password.');
-
-  const user: AuthUser = { uid: existing.uid, email, displayName: existing.name };
+  const displayName = existing ? existing.name : email.split('@')[0];
+  const uid = existing ? existing.uid : 'usr_' + Math.random().toString(36).substring(2, 10);
+  const user: AuthUser = { uid, email, displayName };
   localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
   return user;
 }
 
-/**
- * Registers new user into local storage mock DB.
- * @param email User email
- * @param pass User password
- * @param name User full name
- * @returns Populated AuthUser
- */
 function localMockSignup(email: string, pass: string, name: string): AuthUser {
-  const usersStr = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
-  const users: Record<string, { pass: string; name: string; uid: string }> = usersStr ? JSON.parse(usersStr) : {};
+  if (!email || !email.includes('@')) throw new Error('Please enter a valid email address');
+  if (!pass || pass.length < 6) throw new Error('Password must be at least 6 characters');
+  if (!name.trim()) throw new Error('Please enter your full name');
 
-  if (users[email.toLowerCase()]) throw new Error('Email is already registered. Please log in.');
+  let users: Record<string, { pass: string; name: string; uid: string }> = {};
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
+    if (raw) users = JSON.parse(raw);
+  } catch {
+    // fallback
+  }
 
   const uid = 'usr_' + Math.random().toString(36).substring(2, 12);
   users[email.toLowerCase()] = { pass, name, uid };
@@ -76,7 +79,29 @@ function localMockSignup(email: string, pass: string, name: string): AuthUser {
   return user;
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+async function performGoogleLogin(): Promise<AuthUser> {
+  if (isFirebaseConfigured && auth && googleProvider) {
+    try {
+      const cred = await signInWithPopup(auth, googleProvider);
+      const name = cred.user.displayName || cred.user.email?.split('@')[0] || 'Candidate';
+      const user: AuthUser = { uid: cred.user.uid, email: cred.user.email, displayName: name, photoURL: cred.user.photoURL };
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
+      return user;
+    } catch (err: unknown) {
+      const authErr = err as { code?: string };
+      if (authErr.code === 'auth/unauthorized-domain') {
+        throw new Error('This domain must be authorized in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, please log in with Email & Password.');
+      }
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+  const localName = localStorage.getItem('careerai_last_username') || 'Student Candidate';
+  const fallback: AuthUser = { uid: 'usr_candidate_' + Math.random().toString(36).substring(2, 9), email: 'candidate@university.edu', displayName: localName };
+  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(fallback));
+  return fallback;
+}
+
+function useAuthStateSubscription() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -91,95 +116,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
       });
     }
-
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
       if (stored) setCurrentUser(JSON.parse(stored));
     } catch {
-      // safe fallback
+      // safe
     }
     setLoading(false);
   }, []);
 
+  return { currentUser, setCurrentUser, loading };
+}
+
+async function handleFirebaseOrMockLogin(email: string, pass: string): Promise<AuthUser> {
+  if (isFirebaseConfigured && auth) {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    return { uid: cred.user.uid, email: cred.user.email, displayName: cred.user.displayName || email.split('@')[0] };
+  }
+  return localMockLogin(email, pass);
+}
+
+async function handleFirebaseOrMockSignup(email: string, pass: string, name: string): Promise<AuthUser> {
+  if (isFirebaseConfigured && auth) {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await firebaseUpdateProfile(cred.user, { displayName: name });
+    return { uid: cred.user.uid, email: cred.user.email, displayName: name };
+  }
+  return localMockSignup(email, pass, name);
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser, setCurrentUser, loading } = useAuthStateSubscription();
+
   const login = async (email: string, pass: string) => {
-    if (isFirebaseConfigured && auth) {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      setCurrentUser({ uid: cred.user.uid, email: cred.user.email, displayName: cred.user.displayName || email.split('@')[0] });
-    } else {
-      setCurrentUser(localMockLogin(email, pass));
-    }
+    const user = await handleFirebaseOrMockLogin(email, pass);
+    setCurrentUser(user);
   };
 
   const signup = async (email: string, pass: string, name: string) => {
-    if (isFirebaseConfigured && auth) {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      await firebaseUpdateProfile(cred.user, { displayName: name });
-      setCurrentUser({ uid: cred.user.uid, email: cred.user.email, displayName: name });
-    } else {
-      setCurrentUser(localMockSignup(email, pass, name));
-    }
+    const user = await handleFirebaseOrMockSignup(email, pass, name);
+    setCurrentUser(user);
   };
 
   const loginWithGoogle = async () => {
-    if (isFirebaseConfigured && auth && googleProvider) {
-      try {
-        const cred = await signInWithPopup(auth, googleProvider);
-        const resolvedName = cred.user.displayName || cred.user.email?.split('@')[0] || 'Candidate';
-        const user: AuthUser = { uid: cred.user.uid, email: cred.user.email, displayName: resolvedName, photoURL: cred.user.photoURL };
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-        setCurrentUser(user);
-      } catch (err: unknown) {
-        const authErr = err as { code?: string };
-        if (authErr.code === 'auth/unauthorized-domain') {
-          throw new Error('This domain (career-ai-in.netlify.app) must be authorized in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, please log in with Email & Password.');
-        }
-        throw err instanceof Error ? err : new Error(String(err));
-      }
-    } else {
-      const localName = localStorage.getItem('careerai_last_username') || 'Student Candidate';
-      const fallbackUser: AuthUser = { uid: 'usr_candidate_' + Math.random().toString(36).substring(2, 9), email: 'candidate@university.edu', displayName: localName };
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(fallbackUser));
-      setCurrentUser(fallbackUser);
-    }
+    const user = await performGoogleLogin();
+    setCurrentUser(user);
   };
 
   const logout = async () => {
-    if (isFirebaseConfigured && auth) {
-      await firebaseSignOut(auth);
-    } else {
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
-    }
+    if (isFirebaseConfigured && auth) await firebaseSignOut(auth);
+    else localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
     setCurrentUser(null);
   };
 
-  const saveUserProfile = (profile: StudentProfile) => {
-    localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(profile));
-  };
-
+  const saveUserProfile = (profile: StudentProfile) => localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(profile));
   const getUserProfile = (): StudentProfile | null => {
-    const raw = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
+    try { const raw = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        loading,
-        login,
-        signup,
-        loginWithGoogle,
-        logout,
-        hasCompletedOnboarding: Boolean(getUserProfile()),
-        saveUserProfile,
-        getUserProfile,
-      }}
-    >
+    <AuthContext.Provider value={{ currentUser, loading, login, signup, loginWithGoogle, logout, hasCompletedOnboarding: Boolean(getUserProfile()), saveUserProfile, getUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
