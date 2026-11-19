@@ -19,20 +19,7 @@ import SkipToContent from './components/common/SkipToContent';
 import EvaluatorTelemetryBar from './components/common/EvaluatorTelemetryBar';
 import './index.css';
 
-function ProtectedAppLayout({
-  profile,
-  setProfile,
-  ranking,
-  setRanking,
-  careerMatches,
-  setCareerMatches,
-  selectedCareerId,
-  setSelectedCareerId,
-  gaps,
-  setGaps,
-  roadmap,
-  setRoadmap,
-}: {
+interface AppLayoutProps {
   profile: StudentProfile | null;
   setProfile: (p: StudentProfile) => void;
   ranking: RankingData | null;
@@ -45,7 +32,37 @@ function ProtectedAppLayout({
   setGaps: (g: GapsResponse | null) => void;
   roadmap: RoadmapResponse | null;
   setRoadmap: (r: RoadmapResponse | null) => void;
-}) {
+}
+
+/**
+ * Core authenticated sub-routes.
+ * @param props AppLayoutProps
+ * @returns JSX Element containing authenticated routes
+ */
+function AppCoreRoutes(props: AppLayoutProps) {
+  const { profile, setProfile, ranking, setRanking, careerMatches, setCareerMatches, selectedCareerId, setSelectedCareerId, gaps, setGaps, roadmap, setRoadmap } = props;
+  if (!profile) return null;
+
+  return (
+    <Routes>
+      <Route path="/dashboard" element={<Dashboard profile={profile} ranking={ranking} setRanking={setRanking} careerMatches={careerMatches} setCareerMatches={setCareerMatches} />} />
+      <Route path="/rank" element={<Rank profile={profile} ranking={ranking} setRanking={setRanking} />} />
+      <Route path="/skills" element={<Skills profile={profile} setProfile={setProfile} />} />
+      <Route path="/careers" element={<Careers profile={profile} careerMatches={careerMatches} setCareerMatches={setCareerMatches} setSelectedCareerId={setSelectedCareerId} setGaps={setGaps} />} />
+      <Route path="/roadmap" element={<Roadmap profile={profile} selectedCareerId={selectedCareerId} gaps={gaps} setGaps={setGaps} roadmap={roadmap} setRoadmap={setRoadmap} careerMatches={careerMatches} setSelectedCareerId={setSelectedCareerId} />} />
+      <Route path="/coach" element={<Coach profile={profile} selectedCareerId={selectedCareerId} ranking={ranking} careerMatches={careerMatches} />} />
+      <Route path="/profile" element={<Profile profile={profile} setProfile={setProfile} />} />
+      <Route path="*" element={<Dashboard profile={profile} ranking={ranking} setRanking={setRanking} careerMatches={careerMatches} setCareerMatches={setCareerMatches} />} />
+    </Routes>
+  );
+}
+
+/**
+ * Protected layout boundary enforcing auth and completed onboarding.
+ * @param props AppLayoutProps
+ * @returns JSX Element layout
+ */
+function ProtectedAppLayout(props: AppLayoutProps) {
   const { currentUser, loading } = useAuth();
   const location = useLocation();
 
@@ -57,109 +74,31 @@ function ProtectedAppLayout({
     );
   }
 
-  // Mandatory Authentication
-  if (!currentUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+  if (!currentUser) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!props.profile) return <Navigate to="/onboarding" replace />;
 
-  // Mandatory Onboarding: user must have completed onboarding before dashboard
-  if (!profile) {
-    return <Navigate to="/onboarding" replace />;
-  }
+  const firstName = props.profile.full_name ? props.profile.full_name.split(' ')[0] : undefined;
 
   return (
     <div className="app-layout">
       <SkipToContent />
       <Sidebar />
       <main id="main-content" className="app-main" tabIndex={-1}>
-        <Header userName={profile.full_name ? profile.full_name.split(' ')[0] : undefined} />
+        <Header userName={firstName} />
         <div className="page-content">
-          <Routes>
-            <Route
-              path="/dashboard"
-              element={
-                <Dashboard
-                  profile={profile}
-                  ranking={ranking}
-                  setRanking={setRanking}
-                  careerMatches={careerMatches}
-                  setCareerMatches={setCareerMatches}
-                />
-              }
-            />
-            <Route
-              path="/rank"
-              element={<Rank profile={profile} ranking={ranking} setRanking={setRanking} />}
-            />
-            <Route
-              path="/skills"
-              element={<Skills profile={profile} setProfile={setProfile} />}
-            />
-            <Route
-              path="/careers"
-              element={
-                <Careers
-                  profile={profile}
-                  careerMatches={careerMatches}
-                  setCareerMatches={setCareerMatches}
-                  setSelectedCareerId={setSelectedCareerId}
-                  setGaps={setGaps}
-                />
-              }
-            />
-            <Route
-              path="/roadmap"
-              element={
-                <Roadmap
-                  profile={profile}
-                  selectedCareerId={selectedCareerId}
-                  gaps={gaps}
-                  setGaps={setGaps}
-                  roadmap={roadmap}
-                  setRoadmap={setRoadmap}
-                  careerMatches={careerMatches}
-                  setSelectedCareerId={setSelectedCareerId}
-                />
-              }
-            />
-            <Route
-              path="/coach"
-              element={
-                <Coach
-                  profile={profile}
-                  selectedCareerId={selectedCareerId}
-                  ranking={ranking}
-                  careerMatches={careerMatches}
-                />
-              }
-            />
-            <Route
-              path="/profile"
-              element={<Profile profile={profile} setProfile={setProfile} />}
-            />
-            <Route
-              path="*"
-              element={
-                <Dashboard
-                  profile={profile}
-                  ranking={ranking}
-                  setRanking={setRanking}
-                  careerMatches={careerMatches}
-                  setCareerMatches={setCareerMatches}
-                />
-              }
-            />
-          </Routes>
+          <AppCoreRoutes {...props} />
         </div>
       </main>
     </div>
   );
 }
 
-function MainApp() {
+/**
+ * Manages profile initialization and data synchronization.
+ * @returns State bundle for app execution
+ */
+function useProfileBootstrap() {
   const { currentUser, getUserProfile } = useAuth();
-
-  // Blank initial state - no hardcoded Alex Rivera!
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [ranking, setRanking] = useState<RankingData | null>(null);
   const [careerMatches, setCareerMatches] = useState<CareerMatchesResponse | null>(null);
@@ -167,77 +106,64 @@ function MainApp() {
   const [gaps, setGaps] = useState<GapsResponse | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
 
-  // Restore saved profile when user is authenticated
   useEffect(() => {
-    if (currentUser) {
-      const saved = getUserProfile();
-      if (saved) {
-        setProfile(saved);
-        // Load live rankings and career matches for this profile
-        if (saved.id) {
-          Promise.all([
-            getRanking(saved.id).catch(() => null),
-            getCareerMatches(saved.id).catch(() => null),
-          ]).then(([r, m]) => {
-            if (r) setRanking(r);
-            if (m) setCareerMatches(m);
-          });
-        }
-      } else {
-        setProfile(null);
-        setRanking(null);
-        setCareerMatches(null);
-      }
-    } else {
+    if (!currentUser) {
       setProfile(null);
       setRanking(null);
       setCareerMatches(null);
+      return;
+    }
+    const saved = getUserProfile();
+    if (saved) {
+      setProfile(saved);
+      if (saved.id) {
+        Promise.all([
+          getRanking(saved.id).catch(() => null),
+          getCareerMatches(saved.id).catch(() => null),
+        ]).then(([r, m]) => {
+          if (r) setRanking(r);
+          if (m) setCareerMatches(m);
+        });
+      }
     }
   }, [currentUser]);
+
+  return {
+    profile, setProfile,
+    ranking, setRanking,
+    careerMatches, setCareerMatches,
+    selectedCareerId, setSelectedCareerId,
+    gaps, setGaps,
+    roadmap, setRoadmap,
+  };
+}
+
+/**
+ * Main application routes and views container.
+ * @returns JSX Element
+ */
+function MainApp() {
+  const state = useProfileBootstrap();
 
   return (
     <>
       <SkipToContent />
       <Routes>
-        {/* 1. First page on visit is Landing (as requested) */}
         <Route path="/" element={<Landing />} />
-
-        {/* 2. Auth Routes */}
         <Route path="/login" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
-
-        {/* 3. Mandatory Onboarding: user uploads resume/url/form */}
-        <Route
-          path="/onboarding"
-          element={<Onboarding setProfile={setProfile} />}
-        />
-
-        {/* 4. Protected Core Application Routes */}
-        <Route
-          path="/*"
-          element={
-            <ProtectedAppLayout
-              profile={profile}
-              setProfile={setProfile}
-              ranking={ranking}
-              setRanking={setRanking}
-              careerMatches={careerMatches}
-              setCareerMatches={setCareerMatches}
-              selectedCareerId={selectedCareerId}
-              setSelectedCareerId={setSelectedCareerId}
-              gaps={gaps}
-              setGaps={setGaps}
-              roadmap={roadmap}
-              setRoadmap={setRoadmap}
-            />
-          }
-        />
+        <Route path="/onboarding" element={<Onboarding setProfile={state.setProfile} />} />
+        <Route path="/*" element={<ProtectedAppLayout {...state} />} />
       </Routes>
       <EvaluatorTelemetryBar />
     </>
   );
 }
 
+/**
+ * Root Application entry point with providers.
+ * @returns JSX Element
+ */
 export default function App() {
   return (
     <AuthProvider>

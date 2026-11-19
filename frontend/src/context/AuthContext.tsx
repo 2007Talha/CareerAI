@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -6,7 +6,6 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile as firebaseUpdateProfile,
-  type User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, googleProvider, isFirebaseConfigured } from '../firebase/config';
 import type { StudentProfile } from '../types';
@@ -25,15 +24,57 @@ interface AuthContextType {
   signup: (email: string, pass: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  hasCompletedOnboarding: boolean;
   saveUserProfile: (profile: StudentProfile) => void;
   getUserProfile: () => StudentProfile | null;
-  hasCompletedOnboarding: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 const LOCAL_STORAGE_USER_KEY = 'careerai_auth_user';
+const LOCAL_STORAGE_PROFILE_KEY = 'careerai_student_profile';
 const LOCAL_STORAGE_USERS_DB = 'careerai_registered_users';
+
+/**
+ * Validates credentials against local storage mock DB.
+ * @param email User email
+ * @param pass User password
+ * @returns Populated AuthUser
+ */
+function localMockLogin(email: string, pass: string): AuthUser {
+  const usersStr = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
+  const users: Record<string, { pass: string; name: string; uid: string }> = usersStr ? JSON.parse(usersStr) : {};
+  const existing = users[email.toLowerCase()];
+
+  if (!existing) throw new Error('User not found. Please sign up first.');
+  if (existing.pass !== pass) throw new Error('Invalid password.');
+
+  const user: AuthUser = { uid: existing.uid, email, displayName: existing.name };
+  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
+  return user;
+}
+
+/**
+ * Registers new user into local storage mock DB.
+ * @param email User email
+ * @param pass User password
+ * @param name User full name
+ * @returns Populated AuthUser
+ */
+function localMockSignup(email: string, pass: string, name: string): AuthUser {
+  const usersStr = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
+  const users: Record<string, { pass: string; name: string; uid: string }> = usersStr ? JSON.parse(usersStr) : {};
+
+  if (users[email.toLowerCase()]) throw new Error('Email is already registered. Please log in.');
+
+  const uid = 'usr_' + Math.random().toString(36).substring(2, 12);
+  users[email.toLowerCase()] = { pass, name, uid };
+  localStorage.setItem(LOCAL_STORAGE_USERS_DB, JSON.stringify(users));
+
+  const user: AuthUser = { uid, email, displayName: name };
+  localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
+  return user;
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -41,64 +82,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (isFirebaseConfigured && auth) {
-      const unsubscribe = onAuthStateChanged(auth, (fbUser: FirebaseUser | null) => {
-        if (fbUser) {
-          setCurrentUser({
-            uid: fbUser.uid,
-            email: fbUser.email,
-            displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-            photoURL: fbUser.photoURL,
-          });
+      return onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setCurrentUser({ uid: user.uid, email: user.email, displayName: user.displayName || user.email?.split('@')[0] || 'User', photoURL: user.photoURL });
         } else {
           setCurrentUser(null);
         }
         setLoading(false);
       });
-      return unsubscribe;
-    } else {
-      // Local fallback auth session
-      try {
-        const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-        if (stored) {
-          setCurrentUser(JSON.parse(stored));
-        }
-      } catch {
-        // Safe storage read fallback
-      }
-      setLoading(false);
     }
+
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+      if (stored) setCurrentUser(JSON.parse(stored));
+    } catch {
+      // safe fallback
+    }
+    setLoading(false);
   }, []);
 
   const login = async (email: string, pass: string) => {
     if (isFirebaseConfigured && auth) {
       const cred = await signInWithEmailAndPassword(auth, email, pass);
-      setCurrentUser({
-        uid: cred.user.uid,
-        email: cred.user.email,
-        displayName: cred.user.displayName || email.split('@')[0],
-      });
+      setCurrentUser({ uid: cred.user.uid, email: cred.user.email, displayName: cred.user.displayName || email.split('@')[0] });
     } else {
-      // Local mock login validation
-      const usersStr = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
-      const users: Record<string, { pass: string; name: string; uid: string }> = usersStr
-        ? JSON.parse(usersStr)
-        : {};
-
-      const existing = users[email.toLowerCase()];
-      if (!existing) {
-        throw new Error('User not found. Please sign up first.');
-      }
-      if (existing.pass !== pass) {
-        throw new Error('Invalid password.');
-      }
-
-      const user: AuthUser = {
-        uid: existing.uid,
-        email,
-        displayName: existing.name,
-      };
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-      setCurrentUser(user);
+      setCurrentUser(localMockLogin(email, pass));
     }
   };
 
@@ -106,29 +114,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isFirebaseConfigured && auth) {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       await firebaseUpdateProfile(cred.user, { displayName: name });
-      setCurrentUser({
-        uid: cred.user.uid,
-        email: cred.user.email,
-        displayName: name,
-      });
+      setCurrentUser({ uid: cred.user.uid, email: cred.user.email, displayName: name });
     } else {
-      // Local mock register
-      const usersStr = localStorage.getItem(LOCAL_STORAGE_USERS_DB);
-      const users: Record<string, { pass: string; name: string; uid: string }> = usersStr
-        ? JSON.parse(usersStr)
-        : {};
-
-      if (users[email.toLowerCase()]) {
-        throw new Error('Email is already registered. Please log in.');
-      }
-
-      const uid = 'usr_' + Math.random().toString(36).substring(2, 12);
-      users[email.toLowerCase()] = { pass, name, uid };
-      localStorage.setItem(LOCAL_STORAGE_USERS_DB, JSON.stringify(users));
-
-      const user: AuthUser = { uid, email, displayName: name };
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
-      setCurrentUser(user);
+      setCurrentUser(localMockSignup(email, pass, name));
     }
   };
 
@@ -137,31 +125,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const cred = await signInWithPopup(auth, googleProvider);
         const resolvedName = cred.user.displayName || cred.user.email?.split('@')[0] || 'Candidate';
-        const user: AuthUser = {
-          uid: cred.user.uid,
-          email: cred.user.email,
-          displayName: resolvedName,
-          photoURL: cred.user.photoURL,
-        };
+        const user: AuthUser = { uid: cred.user.uid, email: cred.user.email, displayName: resolvedName, photoURL: cred.user.photoURL };
         localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
         setCurrentUser(user);
       } catch (err: unknown) {
-        const authErr = err as { code?: string; message?: string };
+        const authErr = err as { code?: string };
         if (authErr.code === 'auth/unauthorized-domain') {
-          throw new Error(
-            'This domain (career-ai-in.netlify.app) must be authorized in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, please log in with Email & Password.'
-          );
+          throw new Error('This domain (career-ai-in.netlify.app) must be authorized in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, please log in with Email & Password.');
         }
         throw err instanceof Error ? err : new Error(String(err));
       }
     } else {
-      // Local fallback mode when Firebase client is uninitialized
       const localName = localStorage.getItem('careerai_last_username') || 'Student Candidate';
-      const fallbackUser: AuthUser = {
-        uid: 'usr_candidate_' + Math.random().toString(36).substring(2, 9),
-        email: 'candidate@university.edu',
-        displayName: localName,
-      };
+      const fallbackUser: AuthUser = { uid: 'usr_candidate_' + Math.random().toString(36).substring(2, 9), email: 'candidate@university.edu', displayName: localName };
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(fallbackUser));
       setCurrentUser(fallbackUser);
     }
@@ -177,28 +153,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const saveUserProfile = (profile: StudentProfile) => {
-    if (!currentUser) return;
-    const storageKey = `careerai_profile_${currentUser.uid}`;
-    localStorage.setItem(storageKey, JSON.stringify(profile));
-    localStorage.setItem('careerai_student_profile', JSON.stringify(profile));
+    localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(profile));
   };
 
   const getUserProfile = (): StudentProfile | null => {
-    if (!currentUser) return null;
-    const storageKey = `careerai_profile_${currentUser.uid}`;
-    let stored = localStorage.getItem(storageKey);
-    if (!stored) {
-      stored = localStorage.getItem('careerai_student_profile');
-    }
-    if (!stored) return null;
+    const raw = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY);
+    if (!raw) return null;
     try {
-      return JSON.parse(stored);
+      return JSON.parse(raw);
     } catch {
       return null;
     }
   };
-
-  const hasCompletedOnboarding = Boolean(currentUser && getUserProfile() !== null);
 
   return (
     <AuthContext.Provider
@@ -209,9 +175,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         loginWithGoogle,
         logout,
+        hasCompletedOnboarding: Boolean(getUserProfile()),
         saveUserProfile,
         getUserProfile,
-        hasCompletedOnboarding,
       }}
     >
       {children}
@@ -220,9 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 };

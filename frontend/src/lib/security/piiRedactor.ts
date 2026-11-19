@@ -2,8 +2,7 @@
  * CareerAI — Pre-LLM PII Redactor
  *
  * Scans user inputs before transmitting to AI services (Gemini API)
- * and redacts personally identifiable information (emails, phone numbers,
- * US SSNs, Aadhaar/ID numbers) using deterministic placeholder tokens.
+ * and redacts personally identifiable information using deterministic placeholder tokens.
  */
 
 export interface RedactionResult {
@@ -18,6 +17,31 @@ const SSN_PATTERN = /\b\d{3}-\d{2}-\d{4}\b/g;
 const CREDIT_CARD_PATTERN = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;
 
 /**
+ * Replaces pattern occurrences and records telemetry.
+ * @param text Current string
+ * @param regex Target regex
+ * @param token Replacement token
+ * @param type PII label
+ * @param typesSet Set to record detected type
+ * @returns Object containing replaced text and count
+ */
+function maskPattern(
+  text: string,
+  regex: RegExp,
+  token: string,
+  type: string,
+  typesSet: Set<string>
+): { text: string; count: number } {
+  let count = 0;
+  const replaced = text.replace(regex, () => {
+    count++;
+    typesSet.add(type);
+    return token;
+  });
+  return { text: replaced, count };
+}
+
+/**
  * Scans and redacts sensitive PII from text before forwarding to LLM endpoints.
  * @param input Raw text containing possible personal information
  * @returns Object containing redacted text, total scrubbed count, and matched types
@@ -27,42 +51,26 @@ export function redactPII(input: string): RedactionResult {
     return { redactedText: '', redactedCount: 0, redactedTypes: [] };
   }
 
-  let text = input;
-  let count = 0;
-  // Algorithmic O(1) Set lookup
   const typesDetectedSet = new Set<string>();
+  let totalCount = 0;
+  let text = input;
 
-  // Redact Emails
-  text = text.replace(EMAIL_PATTERN, () => {
-    count++;
-    typesDetectedSet.add('EMAIL');
-    return '[EMAIL_REDACTED]';
-  });
+  const patterns = [
+    { regex: EMAIL_PATTERN, token: '[EMAIL_REDACTED]', type: 'EMAIL' },
+    { regex: PHONE_PATTERN, token: '[PHONE_REDACTED]', type: 'PHONE' },
+    { regex: SSN_PATTERN, token: '[SSN_REDACTED]', type: 'SSN' },
+    { regex: CREDIT_CARD_PATTERN, token: '[CARD_REDACTED]', type: 'CARD' },
+  ];
 
-  // Redact Phone Numbers
-  text = text.replace(PHONE_PATTERN, () => {
-    count++;
-    typesDetectedSet.add('PHONE');
-    return '[PHONE_REDACTED]';
-  });
-
-  // Redact SSN
-  text = text.replace(SSN_PATTERN, () => {
-    count++;
-    typesDetectedSet.add('SSN');
-    return '[SSN_REDACTED]';
-  });
-
-  // Redact Credit Cards
-  text = text.replace(CREDIT_CARD_PATTERN, () => {
-    count++;
-    typesDetectedSet.add('CARD');
-    return '[CARD_REDACTED]';
-  });
+  for (const { regex, token, type } of patterns) {
+    const res = maskPattern(text, regex, token, type, typesDetectedSet);
+    text = res.text;
+    totalCount += res.count;
+  }
 
   return {
     redactedText: text,
-    redactedCount: count,
+    redactedCount: totalCount,
     redactedTypes: Array.from(typesDetectedSet),
   };
 }

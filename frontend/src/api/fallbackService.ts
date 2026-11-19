@@ -16,10 +16,196 @@ import type {
   CoachChatResponse,
   RecalculateResponse,
   Career,
+  SkillEntry,
+  Project,
+  Experience,
+  GapItem,
+  RoadmapItem,
+  CareerFitResult,
 } from '../types';
 
+export const FALLBACK_SKILLS: SkillEntry[] = [
+  { id: 'sk_1', skill_name: 'Python', proficiency: 5, source: 'extracted', evidence: 'Core language in projects & algorithms' },
+  { id: 'sk_2', skill_name: 'TypeScript', proficiency: 5, source: 'extracted', evidence: 'Production UI development with strict typing' },
+  { id: 'sk_3', skill_name: 'React', proficiency: 5, source: 'extracted', evidence: 'Component systems & state architecture' },
+  { id: 'sk_4', skill_name: 'FastAPI', proficiency: 4, source: 'extracted', evidence: 'REST APIs with Pydantic validation' },
+  { id: 'sk_5', skill_name: 'PostgreSQL', proficiency: 4, source: 'extracted', evidence: 'Relational data modeling, indexing & pooling' },
+  { id: 'sk_6', skill_name: 'Docker', proficiency: 4, source: 'extracted', evidence: 'Multi-stage container builds & local compose' },
+  { id: 'sk_7', skill_name: 'Machine Learning', proficiency: 4, source: 'extracted', evidence: 'Feature extraction, embeddings & LLM prompting' },
+  { id: 'sk_8', skill_name: 'Data Structures & Algorithms', proficiency: 5, source: 'extracted', evidence: 'Competitive programming & optimization' },
+  { id: 'sk_9', skill_name: 'Git & GitHub CI/CD', proficiency: 4, source: 'extracted', evidence: 'Automated test runners & deployment pipelines' },
+];
+
+export const FALLBACK_PROJECTS: Project[] = [
+  {
+    id: 'proj_1',
+    title: 'CareerAI — Autonomous Career Readiness Platform',
+    description: 'Engineered an AI-driven readiness assessment system with 6-dimension scoring, in-memory LRU caching, and prompt defense pipeline.',
+    technologies: ['TypeScript', 'React', 'FastAPI', 'PostgreSQL', 'Tailwind CSS'],
+    url: 'https://github.com/2007Talha/CareerAI',
+    highlights: ['6-dimension evaluation rubric', 'Sub-second cached response times', 'WCAG AA accessible interface'],
+    complexity: 5,
+  },
+  {
+    id: 'proj_2',
+    title: 'High-Throughput Real-Time Telemetry Engine',
+    description: 'Architected an asynchronous event pipeline processing 50k events/sec with sub-5ms latency and automated rate limiting.',
+    technologies: ['Python', 'Docker', 'Redis', 'Kafka'],
+    highlights: ['Sliding-window token bucket limiter', 'Distributed microservice architecture'],
+    complexity: 4,
+  },
+];
+
+export const FALLBACK_EXPERIENCES: Experience[] = [
+  {
+    id: 'exp_1',
+    title: 'Software Engineering Intern',
+    company: 'Cloud Innovations Lab',
+    duration_months: 4,
+    description: 'Developed scalable microservices, integrated LRU caching reducing latency by 35%, and built accessible React dashboards.',
+    technologies: ['React', 'TypeScript', 'FastAPI', 'Docker'],
+    experience_type: 'internship',
+  },
+];
+
+export const FALLBACK_CAREERS: Career[] = [
+  {
+    id: 'car_fullstack',
+    name: 'Full-Stack Software Engineer',
+    description: 'Designs, develops, and deploys scalable web applications across the entire stack.',
+    avg_salary_usd: 125000,
+    growth_outlook: 'Very High (+25% over 5 years)',
+  },
+  {
+    id: 'car_aiml',
+    name: 'AI Application Engineer',
+    description: 'Integrates frontier LLMs, embedding models, and cognitive pipelines into production software.',
+    avg_salary_usd: 140000,
+    growth_outlook: 'Exceptional (+40% over 5 years)',
+  },
+  {
+    id: 'car_cloud',
+    name: 'Cloud & DevOps Engineer',
+    description: 'Automates infrastructure, container orchestration, and CI/CD pipelines.',
+    avg_salary_usd: 130000,
+    growth_outlook: 'High (+20% over 5 years)',
+  },
+];
+
+export const FALLBACK_MATCHES: CareerFitResult[] = [
+  {
+    career: FALLBACK_CAREERS[0],
+    fit_percentage: 91,
+    match_rank: 1,
+    reasons: [
+      'Strong proficiency in TypeScript, React, and component architecture',
+      'Demonstrated backend API experience with Python, FastAPI, and PostgreSQL',
+      'Production project portfolio demonstrating full-lifecycle development',
+    ],
+  },
+  {
+    career: FALLBACK_CAREERS[1],
+    fit_percentage: 86,
+    match_rank: 2,
+    reasons: [
+      'Experience building prompt guardrails, PII sanitization, and LLM integrations',
+      'Solid core Python foundation and algorithmic reasoning',
+    ],
+  },
+  {
+    career: FALLBACK_CAREERS[2],
+    fit_percentage: 79,
+    match_rank: 3,
+    reasons: [
+      'Practical Docker containerization knowledge and automated testing',
+      'Understanding of distributed architectures and rate limiting',
+    ],
+  },
+];
+
+export const FALLBACK_GAPS: GapItem[] = [
+  {
+    skill_name: 'Kubernetes & Container Orchestration',
+    current_level: 2,
+    target_level: 4,
+    gap_size: 2,
+    importance: 'important',
+    priority_score: 82,
+    classification: 'developing',
+  },
+  {
+    skill_name: 'Distributed System Design & Caching',
+    current_level: 3,
+    target_level: 5,
+    gap_size: 2,
+    importance: 'required',
+    priority_score: 90,
+    classification: 'developing',
+  },
+  {
+    skill_name: 'Vector Databases & Semantic Search',
+    current_level: 3,
+    target_level: 4,
+    gap_size: 1,
+    importance: 'important',
+    priority_score: 75,
+    classification: 'strong',
+  },
+  {
+    skill_name: 'GraphQL API Design',
+    current_level: 2,
+    target_level: 4,
+    gap_size: 2,
+    importance: 'optional',
+    priority_score: 60,
+    classification: 'developing',
+  },
+];
+
+export const FALLBACK_ROADMAP_ITEMS: RoadmapItem[] = [
+  {
+    id: 'rdm_1',
+    action_title: 'Containerize & Deploy a Multi-Service App with Kubernetes',
+    action_detail: 'Deploy a multi-tier microservice architecture using Minikube or K3s with declarative manifests and health probes.',
+    priority_order: 1,
+    phase: 'Phase 1: Systems & Infrastructure',
+    estimated_hours: 12,
+    gap_skill_name: 'Kubernetes & Container Orchestration',
+    is_completed: false,
+  },
+  {
+    id: 'rdm_2',
+    action_title: 'Implement Distributed Caching & Rate Limiting with Redis',
+    action_detail: 'Integrate an in-memory Redis cluster for session caching and sliding-window rate limiting on high-traffic endpoints.',
+    priority_order: 2,
+    phase: 'Phase 2: Scale & Reliability',
+    estimated_hours: 10,
+    gap_skill_name: 'Distributed System Design & Caching',
+    is_completed: false,
+  },
+  {
+    id: 'rdm_3',
+    action_title: 'Build a Vector Search Semantic Knowledge Base',
+    action_detail: 'Implement pgvector or Pinecone indexing for semantic document retrieval and citation-backed RAG answers.',
+    priority_order: 3,
+    phase: 'Phase 3: AI Augmentation',
+    estimated_hours: 15,
+    gap_skill_name: 'Vector Databases & Semantic Search',
+    is_completed: false,
+  },
+  {
+    id: 'rdm_4',
+    action_title: 'Publish an Open-Source Technical Showcase & Write a Blog Post',
+    action_detail: 'Document architecture decisions, benchmarking results, and deployment steps in an open-source repository and write a DEV.to article.',
+    priority_order: 4,
+    phase: 'Phase 4: Industry Visibility',
+    estimated_hours: 8,
+    is_completed: false,
+  },
+];
+
 /**
- * Extracts a human-readable display name from a LinkedIn URL or file name.
+ * Extracts a candidate display name from a LinkedIn URL or file name.
  * @param source Raw URL or file name
  * @returns Cleaned title-case name
  */
@@ -52,79 +238,57 @@ export function extractCandidateName(source: string): string {
 }
 
 /**
- * Generates an in-memory StudentProfile from a LinkedIn URL.
- * @param linkedinUrl Public LinkedIn URL
- * @returns Complete UploadResponse
+ * Persists fallback profile to local storage safely.
+ * @param profile Student profile payload
  */
-export function generateFallbackLinkedInProfile(linkedinUrl: string): UploadResponse {
-  const candidateName = extractCandidateName(linkedinUrl);
+function cacheFallbackProfile(profile: StudentProfile): void {
+  try {
+    localStorage.setItem('careerai_student_profile', JSON.stringify(profile));
+    localStorage.setItem(`careerai_cached_profile_${profile.id}`, JSON.stringify(profile));
+  } catch {
+    // quota safe
+  }
+}
+
+/**
+ * Constructs an in-memory StudentProfile object.
+ * @param candidateName Name of candidate
+ * @param source Source indicator
+ * @returns Populated StudentProfile
+ */
+function buildFallbackProfile(candidateName: string, source: 'linkedin' | 'resume'): StudentProfile {
   const profileId = 'prof_' + Math.random().toString(36).substring(2, 10);
   const now = new Date().toISOString();
-
-  const profile: StudentProfile = {
+  return {
     id: profileId,
     full_name: candidateName,
     email: `${candidateName.toLowerCase().replace(/\s+/g, '.')}@university.edu`,
     university: 'State University / Tech Institute',
     degree: 'B.S. in Computer Science',
     graduation_year: 2026,
-    gpa: 3.84,
+    gpa: source === 'linkedin' ? 3.84 : 3.82,
     gpa_scale: 4.0,
     profile_confirmed: true,
-    skills: [
-      { id: 'sk_1', skill_name: 'Python', proficiency: 5, source: 'extracted', evidence: 'Core language in 4 projects & algorithms' },
-      { id: 'sk_2', skill_name: 'TypeScript', proficiency: 5, source: 'extracted', evidence: 'Production UI development with strict typing' },
-      { id: 'sk_3', skill_name: 'React', proficiency: 5, source: 'extracted', evidence: 'Modern hooks, memoization & component systems' },
-      { id: 'sk_4', skill_name: 'FastAPI', proficiency: 4, source: 'extracted', evidence: 'Asynchronous REST APIs with Pydantic validation' },
-      { id: 'sk_5', skill_name: 'PostgreSQL', proficiency: 4, source: 'extracted', evidence: 'Relational data modeling, indexing & pooling' },
-      { id: 'sk_6', skill_name: 'Docker', proficiency: 4, source: 'extracted', evidence: 'Multi-stage container builds & local compose' },
-      { id: 'sk_7', skill_name: 'Machine Learning', proficiency: 4, source: 'extracted', evidence: 'Feature extraction, embeddings & LLM prompting' },
-      { id: 'sk_8', skill_name: 'Data Structures & Algorithms', proficiency: 5, source: 'extracted', evidence: 'Competitive programming & optimization' },
-      { id: 'sk_9', skill_name: 'Git & GitHub CI/CD', proficiency: 4, source: 'extracted', evidence: 'Automated test runners & deployment pipelines' },
-    ],
-    projects: [
-      {
-        id: 'proj_1',
-        title: 'CareerAI — Autonomous Career Readiness Platform',
-        description: 'Engineered an AI-driven readiness assessment system with 6-dimension scoring, in-memory LRU caching, and prompt defense pipeline.',
-        technologies: ['TypeScript', 'React', 'FastAPI', 'PostgreSQL', 'Tailwind CSS'],
-        url: 'https://github.com/2007Talha/CareerAI',
-        highlights: ['Evaluated 6-dimension readiness rubrics', 'Sub-second response cache hits', 'WCAG AA accessible interface'],
-        complexity: 5,
-      },
-      {
-        id: 'proj_2',
-        title: 'High-Throughput Real-Time Telemetry Engine',
-        description: 'Architected an asynchronous event pipeline processing 50k events/sec with sub-5ms latency and automated rate limiting.',
-        technologies: ['Python', 'Docker', 'Redis', 'Kafka'],
-        highlights: ['Sliding-window token bucket limiter', 'Distributed microservice architecture'],
-        complexity: 4,
-      },
-    ],
-    experiences: [
-      {
-        id: 'exp_1',
-        title: 'Software Engineering Intern',
-        company: 'Cloud Innovations Lab',
-        duration_months: 4,
-        description: 'Developed scalable microservices, integrated LRU caching reducing latency by 35%, and built accessible React dashboards.',
-        technologies: ['React', 'TypeScript', 'FastAPI', 'Docker'],
-        experience_type: 'internship',
-      },
-    ],
+    skills: FALLBACK_SKILLS,
+    projects: FALLBACK_PROJECTS,
+    experiences: FALLBACK_EXPERIENCES,
     created_at: now,
     updated_at: now,
   };
+}
 
-  try {
-    localStorage.setItem('careerai_student_profile', JSON.stringify(profile));
-    localStorage.setItem(`careerai_cached_profile_${profileId}`, JSON.stringify(profile));
-  } catch {
-    // quota safe
-  }
+/**
+ * Generates an in-memory StudentProfile from a LinkedIn URL.
+ * @param linkedinUrl Public LinkedIn URL
+ * @returns Complete UploadResponse
+ */
+export function generateFallbackLinkedInProfile(linkedinUrl: string): UploadResponse {
+  const candidateName = extractCandidateName(linkedinUrl);
+  const profile = buildFallbackProfile(candidateName, 'linkedin');
+  cacheFallbackProfile(profile);
 
   return {
-    student_id: profileId,
+    student_id: profile.id,
     filename: linkedinUrl,
     raw_text_preview: `Extracted profile for ${candidateName} from LinkedIn URL. Discovered 9 verified skills, 2 major engineering projects, and software engineering internship experience.`,
     extracted_profile: profile,
@@ -139,66 +303,13 @@ export function generateFallbackLinkedInProfile(linkedinUrl: string): UploadResp
  */
 export function generateFallbackResumeProfile(file: File): UploadResponse {
   const candidateName = extractCandidateName(file.name);
-  const profileId = 'prof_' + Math.random().toString(36).substring(2, 10);
-  const now = new Date().toISOString();
-
-  const profile: StudentProfile = {
-    id: profileId,
-    full_name: candidateName,
-    email: `${candidateName.toLowerCase().replace(/\s+/g, '.')}@university.edu`,
-    university: 'State University / Tech Institute',
-    degree: 'B.S. in Computer Science',
-    graduation_year: 2026,
-    gpa: 3.82,
-    gpa_scale: 4.0,
-    profile_confirmed: true,
-    skills: [
-      { id: 'sk_1', skill_name: 'Python', proficiency: 5, source: 'extracted', evidence: 'Extracted from resume technical skills' },
-      { id: 'sk_2', skill_name: 'TypeScript', proficiency: 5, source: 'extracted', evidence: 'Frontend architecture & typed client libraries' },
-      { id: 'sk_3', skill_name: 'React', proficiency: 5, source: 'extracted', evidence: 'Component design, context state & responsive layouts' },
-      { id: 'sk_4', skill_name: 'FastAPI', proficiency: 4, source: 'extracted', evidence: 'RESTful API endpoints and Swagger documentation' },
-      { id: 'sk_5', skill_name: 'PostgreSQL', proficiency: 4, source: 'extracted', evidence: 'Database schemas, foreign keys and index queries' },
-      { id: 'sk_6', skill_name: 'Docker', proficiency: 4, source: 'extracted', evidence: 'Containerization and environment portability' },
-      { id: 'sk_7', skill_name: 'Machine Learning', proficiency: 4, source: 'extracted', evidence: 'Model prompting, data preprocessing and embeddings' },
-      { id: 'sk_8', skill_name: 'Data Structures & Algorithms', proficiency: 5, source: 'extracted', evidence: 'Algorithm analysis, complexity and problem solving' },
-    ],
-    projects: [
-      {
-        id: 'proj_1',
-        title: 'CareerAI — Autonomous Career Readiness Platform',
-        description: 'Engineered an AI-driven readiness assessment system with 6-dimension scoring, in-memory LRU caching, and prompt defense pipeline.',
-        technologies: ['TypeScript', 'React', 'FastAPI', 'PostgreSQL', 'Tailwind CSS'],
-        url: 'https://github.com/2007Talha/CareerAI',
-        highlights: ['6-dimension evaluation rubric', 'Sub-second cached response times', 'WCAG AA accessible interface'],
-        complexity: 5,
-      },
-    ],
-    experiences: [
-      {
-        id: 'exp_1',
-        title: 'Software Engineering Intern',
-        company: 'Cloud Innovations Lab',
-        duration_months: 3,
-        description: 'Engineered backend microservices, optimized query latency, and authored automated unit test suites.',
-        technologies: ['React', 'TypeScript', 'FastAPI', 'Docker'],
-        experience_type: 'internship',
-      },
-    ],
-    created_at: now,
-    updated_at: now,
-  };
-
-  try {
-    localStorage.setItem('careerai_student_profile', JSON.stringify(profile));
-    localStorage.setItem(`careerai_cached_profile_${profileId}`, JSON.stringify(profile));
-  } catch {
-    // quota safe
-  }
+  const profile = buildFallbackProfile(candidateName, 'resume');
+  cacheFallbackProfile(profile);
 
   return {
-    student_id: profileId,
+    student_id: profile.id,
     filename: file.name,
-    raw_text_preview: `Extracted profile for ${candidateName} from resume ${file.name}. Discovered 8 verified technical skills, full-stack projects, and internship experience.`,
+    raw_text_preview: `Extracted profile for ${candidateName} from resume ${file.name}. Discovered 9 verified technical skills, full-stack projects, and internship experience.`,
     extracted_profile: profile,
     message: 'Resume successfully parsed and mapped to career readiness rubric.',
   };
@@ -236,54 +347,7 @@ export function generateFallbackRanking(profileId: string): RankingData {
 export function generateFallbackCareerMatches(profileId: string): CareerMatchesResponse {
   return {
     student_id: profileId,
-    matches: [
-      {
-        career: {
-          id: 'car_fullstack',
-          name: 'Full-Stack Software Engineer',
-          description: 'Designs, develops, and deploys scalable web applications across the entire stack.',
-          avg_salary_usd: 125000,
-          growth_outlook: 'Very High (+25% over 5 years)',
-        },
-        fit_percentage: 91,
-        match_rank: 1,
-        reasons: [
-          'Strong proficiency in TypeScript, React, and component architecture',
-          'Demonstrated backend API experience with Python, FastAPI, and PostgreSQL',
-          'Production project portfolio demonstrating full-lifecycle development',
-        ],
-      },
-      {
-        career: {
-          id: 'car_aiml',
-          name: 'AI Application Engineer',
-          description: 'Integrates frontier LLMs, embedding models, and cognitive pipelines into production software.',
-          avg_salary_usd: 140000,
-          growth_outlook: 'Exceptional (+40% over 5 years)',
-        },
-        fit_percentage: 86,
-        match_rank: 2,
-        reasons: [
-          'Experience building prompt guardrails, PII sanitization, and LLM integrations',
-          'Solid core Python foundation and algorithmic reasoning',
-        ],
-      },
-      {
-        career: {
-          id: 'car_cloud',
-          name: 'Cloud & DevOps Engineer',
-          description: 'Automates infrastructure, container orchestration, and CI/CD pipelines.',
-          avg_salary_usd: 130000,
-          growth_outlook: 'High (+20% over 5 years)',
-        },
-        fit_percentage: 79,
-        match_rank: 3,
-        reasons: [
-          'Practical Docker containerization knowledge and automated testing',
-          'Understanding of distributed architectures and rate limiting',
-        ],
-      },
-    ],
+    matches: FALLBACK_MATCHES,
   };
 }
 
@@ -304,44 +368,7 @@ export function generateFallbackSkillGaps(profileId: string, careerId: string): 
     student_id: profileId,
     career_id: careerId,
     career_name: careerName,
-    gaps: [
-      {
-        skill_name: 'Kubernetes & Container Orchestration',
-        current_level: 2,
-        target_level: 4,
-        gap_size: 2,
-        importance: 'important',
-        priority_score: 82,
-        classification: 'developing',
-      },
-      {
-        skill_name: 'Distributed System Design & Caching',
-        current_level: 3,
-        target_level: 5,
-        gap_size: 2,
-        importance: 'required',
-        priority_score: 90,
-        classification: 'developing',
-      },
-      {
-        skill_name: 'Vector Databases & Semantic Search',
-        current_level: 3,
-        target_level: 4,
-        gap_size: 1,
-        importance: 'important',
-        priority_score: 75,
-        classification: 'strong',
-      },
-      {
-        skill_name: 'GraphQL API Design',
-        current_level: 2,
-        target_level: 4,
-        gap_size: 2,
-        importance: 'optional',
-        priority_score: 60,
-        classification: 'developing',
-      },
-    ],
+    gaps: FALLBACK_GAPS,
   };
 }
 
@@ -362,47 +389,7 @@ export function generateFallbackRoadmap(profileId: string, careerId: string): Ro
     student_id: profileId,
     career_id: careerId,
     career_name: careerName,
-    items: [
-      {
-        id: 'rdm_1',
-        action_title: 'Containerize & Deploy a Multi-Service App with Kubernetes',
-        action_detail: 'Deploy a multi-tier microservice architecture using Minikube or K3s with declarative manifests and health probes.',
-        priority_order: 1,
-        phase: 'Phase 1: Systems & Infrastructure',
-        estimated_hours: 12,
-        gap_skill_name: 'Kubernetes & Container Orchestration',
-        is_completed: false,
-      },
-      {
-        id: 'rdm_2',
-        action_title: 'Implement Distributed Caching & Rate Limiting with Redis',
-        action_detail: 'Integrate an in-memory Redis cluster for session caching and sliding-window rate limiting on high-traffic endpoints.',
-        priority_order: 2,
-        phase: 'Phase 2: Scale & Reliability',
-        estimated_hours: 10,
-        gap_skill_name: 'Distributed System Design & Caching',
-        is_completed: false,
-      },
-      {
-        id: 'rdm_3',
-        action_title: 'Build a Vector Search Semantic Knowledge Base',
-        action_detail: 'Implement pgvector or Pinecone indexing for semantic document retrieval and citation-backed RAG answers.',
-        priority_order: 3,
-        phase: 'Phase 3: AI Augmentation',
-        estimated_hours: 15,
-        gap_skill_name: 'Vector Databases & Semantic Search',
-        is_completed: false,
-      },
-      {
-        id: 'rdm_4',
-        action_title: 'Publish an Open-Source Technical Showcase & Write a Blog Post',
-        action_detail: 'Document architecture decisions, benchmarking results, and deployment steps in an open-source repository and write a DEV.to article.',
-        priority_order: 4,
-        phase: 'Phase 4: Industry Visibility',
-        estimated_hours: 8,
-        is_completed: false,
-      },
-    ],
+    items: FALLBACK_ROADMAP_ITEMS,
   };
 }
 
@@ -470,30 +457,3 @@ export function generateFallbackRecalculate(
     message: `Readiness index boosted by +${Math.round(boost * 10) / 10} points upon completing ${completedItemIds.length} milestone(s)!`,
   };
 }
-
-/**
- * Predefined static careers for career catalog.
- */
-export const FALLBACK_CAREERS: Career[] = [
-  {
-    id: 'car_fullstack',
-    name: 'Full-Stack Software Engineer',
-    description: 'Designs, develops, and deploys scalable web applications across the entire stack.',
-    avg_salary_usd: 125000,
-    growth_outlook: 'Very High (+25% over 5 years)',
-  },
-  {
-    id: 'car_aiml',
-    name: 'AI Application Engineer',
-    description: 'Integrates frontier LLMs, embedding models, and cognitive pipelines into production software.',
-    avg_salary_usd: 140000,
-    growth_outlook: 'Exceptional (+40% over 5 years)',
-  },
-  {
-    id: 'car_cloud',
-    name: 'Cloud & DevOps Engineer',
-    description: 'Automates infrastructure, container orchestration, and CI/CD pipelines.',
-    avg_salary_usd: 130000,
-    growth_outlook: 'High (+20% over 5 years)',
-  },
-];

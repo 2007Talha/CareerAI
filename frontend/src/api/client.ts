@@ -392,6 +392,26 @@ export async function getRoadmap(profileId: string, careerId: string): Promise<R
 }
 
 /**
+ * Generates standardized guard response when prompt injection is detected.
+ * @param profileId Student profile UUID
+ * @param sanitized Sanitized user message
+ * @returns CoachChatResponse
+ */
+function buildCoachGuardResponse(profileId: string, sanitized: string): CoachChatResponse {
+  const reply =
+    "I am your AI Career Coach. I am programmed to focus strictly on career readiness, skill development, and professional growth. Let's keep our discussion focused on your career goals!";
+  const now = new Date().toISOString();
+  return {
+    student_id: profileId,
+    reply,
+    history: [
+      { role: 'user', content: sanitized, created_at: now },
+      { role: 'assistant', content: reply, created_at: now },
+    ],
+  };
+}
+
+/**
  * Sends a message to the AI Career Coach with pre-LLM security defenses.
  * @param profileId Student profile UUID
  * @param message Raw student message
@@ -403,35 +423,13 @@ export async function sendCoachMessage(
   message: string,
   careerId?: string
 ): Promise<CoachChatResponse> {
-  // 1. Sanitization: Strip dangerous script & XSS payloads
   const sanitized = sanitizeInput(message);
-
-  // 2. Prompt Guard: Check for jailbreak & prompt injection attempts
   const inspection = inspectPrompt(sanitized);
   if (!inspection.isSafe) {
-    return {
-      student_id: profileId,
-      reply:
-        "I am your AI Career Coach. I am programmed to focus strictly on career readiness, skill development, and professional growth. Let's keep our discussion focused on your career goals!",
-      history: [
-        {
-          role: 'user',
-          content: sanitized,
-          created_at: new Date().toISOString(),
-        },
-        {
-          role: 'assistant',
-          content:
-            "I am your AI Career Coach. I am programmed to focus strictly on career readiness, skill development, and professional growth. Let's keep our discussion focused on your career goals!",
-          created_at: new Date().toISOString(),
-        },
-      ],
-    };
+    return buildCoachGuardResponse(profileId, sanitized);
   }
 
-  // 3. PII Redaction: Pre-LLM redaction of personal credentials
   const { redactedText } = redactPII(sanitized);
-
   try {
     const { data } = await api.post<CoachChatResponse>(
       `/coach/${profileId}/chat`,
