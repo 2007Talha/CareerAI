@@ -107,7 +107,7 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <div className="hero" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 24px' }}>
+      <main id="main-content" className="hero" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 24px' }}>
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 880, textAlign: 'center' }}>
           <div className="hero-badge" style={{ margin: '0 auto 20px auto' }}>
             <Sparkles size={16} />
@@ -203,7 +203,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

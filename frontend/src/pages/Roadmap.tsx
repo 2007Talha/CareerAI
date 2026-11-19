@@ -78,8 +78,8 @@ export default function Roadmap({
     try {
       const result = await recalculateScore(profile.id, Array.from(completedItems));
       setRecalcResult(result);
-    } catch (err) {
-      console.error('Recalculation failed:', err);
+    } catch {
+      // Graceful fallback for recalculation
     } finally {
       setRecalculating(false);
     }

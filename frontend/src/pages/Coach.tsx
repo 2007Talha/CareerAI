@@ -57,7 +57,7 @@ export default function Coach({ profile, selectedCareerId, ranking, careerMatche
       if (response && response.history) {
         setMessages(response.history);
       }
-    } catch (err: any) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {

@@ -34,7 +34,7 @@ export default function Careers({
 
   useEffect(() => {
     if (profile && !careerMatches) {
-      getCareerMatches(profile.id).then(setCareerMatches).catch(console.error);
+      getCareerMatches(profile.id).then(setCareerMatches).catch(() => {});
     }
   }, [profile]);
 

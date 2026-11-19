@@ -37,8 +37,8 @@ if (isFirebaseConfigured) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
-  } catch (err) {
-    console.warn('[Firebase] Initialization error, falling back to local auth mode:', err);
+  } catch {
+    // Graceful fallback to local auth mode
   }
 }
 

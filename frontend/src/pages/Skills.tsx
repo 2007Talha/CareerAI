@@ -369,7 +369,7 @@ export default function Skills({ profile, setProfile }: Props) {
                     color: '#ffffff',
                     fontSize: '0.8rem',
                   }}
-                  formatter={(val: any) => [`${Number(val)}% Proficiency`, 'Score']}
+                  formatter={(val: unknown) => [`${Number(val)}% Proficiency`, 'Score']}
                 />
                 <Radar
                   dataKey="value"

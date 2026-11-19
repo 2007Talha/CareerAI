@@ -67,8 +67,9 @@ export default function Onboarding({ setProfile }: Props) {
         setProfile(result.extracted_profile);
         navigate('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to process resume. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to process resume. Please try again.';
+      setError(msg);
       setIsProcessing(false);
     }
   }, [navigate, setProfile, saveUserProfile]);
@@ -98,8 +99,9 @@ export default function Onboarding({ setProfile }: Props) {
         setProfile(result.extracted_profile);
         navigate('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to import LinkedIn profile. Please check the URL.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to import LinkedIn profile. Please check the URL.';
+      setError(msg);
       setIsProcessing(false);
     }
   };
@@ -123,8 +125,9 @@ export default function Onboarding({ setProfile }: Props) {
       saveUserProfile(profile);
       setProfile(profile);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Failed to create profile');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create profile';
+      setError(msg);
     }
   };
 
@@ -223,7 +226,8 @@ export default function Onboarding({ setProfile }: Props) {
       </header>
 
       {/* Main Content Area (Photo 2) */}
-      <div
+      <main
+        id="main-content"
         style={{
           flex: 1,
           display: 'flex',
@@ -661,7 +665,7 @@ export default function Onboarding({ setProfile }: Props) {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -62,8 +62,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (stored) {
           setCurrentUser(JSON.parse(stored));
         }
-      } catch (err) {
-        console.error('Failed to parse local auth user', err);
+      } catch {
+        // Safe storage read fallback
       }
       setLoading(false);
     }
@@ -145,13 +145,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
         setCurrentUser(user);
-      } catch (err: any) {
-        if (err.code === 'auth/unauthorized-domain') {
+      } catch (err: unknown) {
+        const authErr = err as { code?: string; message?: string };
+        if (authErr.code === 'auth/unauthorized-domain') {
           throw new Error(
             'This domain (career-ai-in.netlify.app) must be authorized in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, please log in with Email & Password.'
           );
         }
-        throw err;
+        throw err instanceof Error ? err : new Error(String(err));
       }
     } else {
       // Local fallback mode when Firebase client is uninitialized

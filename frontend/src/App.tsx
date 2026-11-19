@@ -197,6 +197,7 @@ function MainApp() {
 
   return (
     <>
+      <SkipToContent />
       <Routes>
         {/* 1. First page on visit is Landing (as requested) */}
         <Route path="/" element={<Landing />} />

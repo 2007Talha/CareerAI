@@ -39,8 +39,9 @@ export default function Auth() {
         await signup(email, password, name.trim());
         navigate('/onboarding');
       }
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Authentication failed. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -57,15 +58,17 @@ export default function Auth() {
       } else {
         navigate('/onboarding');
       }
-    } catch (err: any) {
-      setError(err.message || 'Google sign-in failed. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
+    <main
+      id="main-content"
       style={{
         minHeight: '100vh',
         background: '#f8faff',
@@ -372,6 +375,6 @@ export default function Auth() {
           <span>Mandatory resume or profile upload is required after sign up to generate your readiness rubric.</span>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

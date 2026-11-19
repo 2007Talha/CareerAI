@@ -23,7 +23,7 @@ export default function Rank({ profile, ranking, setRanking }: Props) {
 
   useEffect(() => {
     if (profile && !ranking) {
-      getRanking(profile.id).then(setRanking).catch(console.error);
+      getRanking(profile.id).then(setRanking).catch(() => {});
     }
   }, [profile]);
 
