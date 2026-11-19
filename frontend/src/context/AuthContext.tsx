@@ -134,22 +134,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async () => {
     if (isFirebaseConfigured && auth && googleProvider) {
-      const cred = await signInWithPopup(auth, googleProvider);
-      setCurrentUser({
-        uid: cred.user.uid,
-        email: cred.user.email,
-        displayName: cred.user.displayName || cred.user.email?.split('@')[0] || 'User',
-        photoURL: cred.user.photoURL,
-      });
+      try {
+        const cred = await signInWithPopup(auth, googleProvider);
+        const resolvedName = cred.user.displayName || cred.user.email?.split('@')[0] || 'Candidate';
+        const user: AuthUser = {
+          uid: cred.user.uid,
+          email: cred.user.email,
+          displayName: resolvedName,
+          photoURL: cred.user.photoURL,
+        };
+        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
+        setCurrentUser(user);
+      } catch (err: any) {
+        if (err.code === 'auth/unauthorized-domain') {
+          throw new Error(
+            'This domain (career-ai-in.netlify.app) must be authorized in Firebase Console -> Authentication -> Settings -> Authorized Domains. Alternatively, please log in with Email & Password.'
+          );
+        }
+        throw err;
+      }
     } else {
-      // Seamless demo fallback when Firebase credentials are not supplied in cloud deploy
-      const demoUser: AuthUser = {
-        uid: 'usr_google_' + Math.random().toString(36).substring(2, 9),
-        email: 'candidate.google@university.edu',
-        displayName: 'Google Demo Candidate',
+      // Local fallback mode when Firebase client is uninitialized
+      const localName = localStorage.getItem('careerai_last_username') || 'Student Candidate';
+      const fallbackUser: AuthUser = {
+        uid: 'usr_candidate_' + Math.random().toString(36).substring(2, 9),
+        email: 'candidate@university.edu',
+        displayName: localName,
       };
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(demoUser));
-      setCurrentUser(demoUser);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(fallbackUser));
+      setCurrentUser(fallbackUser);
     }
   };
 
