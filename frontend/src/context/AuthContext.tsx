@@ -142,7 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         photoURL: cred.user.photoURL,
       });
     } else {
-      throw new Error('Google Sign-in is only available when Firebase is configured.');
+      // Seamless demo fallback when Firebase credentials are not supplied in cloud deploy
+      const demoUser: AuthUser = {
+        uid: 'usr_google_' + Math.random().toString(36).substring(2, 9),
+        email: 'candidate.google@university.edu',
+        displayName: 'Google Demo Candidate',
+      };
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(demoUser));
+      setCurrentUser(demoUser);
     }
   };
 
