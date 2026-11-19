@@ -1,0 +1,7 @@
+career_id,career_name,required_skills,important_skills,optional_skills
+Software Engineer,"Python;Data Structures & Algorithms;System Design;Git","SQL;RESTful APIs;Docker;Testing & QA","Agile/Scrum;Linux"
+ML Engineer,"Python;Machine Learning;Deep Learning;PyTorch","Docker;scikit-learn;SQL;RESTful APIs","Kubernetes;AWS;Natural Language Processing"
+Data Scientist,"Python;Statistical Analysis;Machine Learning;SQL","Pandas;Data Visualization;scikit-learn;R","Natural Language Processing;Data Engineering"
+Cybersecurity Analyst,"Network Security;Linux;Python;SIEM Tools","Penetration Testing;Cryptography;Incident Response;Bash","AWS;SQL"
+Cloud Engineer,"AWS;Docker;Kubernetes;Terraform","Linux;Python;DevOps;CI/CD","Cloud Architecture;Bash"
+Full Stack Developer,"JavaScript;React;Node.js;SQL","TypeScript;RESTful APIs;Git;PostgreSQL","Docker;Next.js;MongoDB"

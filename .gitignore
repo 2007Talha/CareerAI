@@ -1,0 +1,70 @@
+# =============================================================================
+# CareerAI .gitignore
+# Strictly keeps repository size under 10 MB (PromptWars Rule)
+# =============================================================================
+
+# --- Environment & Secrets ---
+.env
+.env.*
+*.env
+*.pem
+*.key
+
+# --- Python ---
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+**/.venv/
+venv/
+**/venv/
+env/
+**/env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# --- Node / Frontend ---
+node_modules/
+**/node_modules/
+frontend/dist/
+dist/
+**/dist/
+frontend/build/
+.vite/
+**/.vite/
+*.tsbuildinfo
+
+# --- IDE & OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- ML artifacts & checkpoints ---
+ml/models/*.joblib
+ml/models/*.pkl
+ml/models/*.h5
+
+# --- Uploaded files & temporary caches ---
+uploads/
+temp/
+logs/
+*.log
+.neon/
+.neon

@@ -1,0 +1,39 @@
+# =============================================================================
+# CareerAI Backend Dependencies
+# =============================================================================
+
+# --- Web Framework ---
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.6
+python-multipart>=0.0.9
+
+# --- Data Validation ---
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+email-validator>=2.2.0
+
+# --- Database ---
+sqlalchemy[asyncio]>=2.0.35
+asyncpg>=0.29.0
+pgvector>=0.3.3
+
+# --- Document Parsing ---
+PyMuPDF>=1.24.10
+python-docx>=1.1.2
+
+# --- Google Gemini AI ---
+google-generativeai>=0.8.1
+
+# --- ML / Scoring ---
+scikit-learn>=1.5.2
+numpy>=2.1.0
+pandas>=2.2.0
+
+# --- Rate Limiting & Security ---
+slowapi>=0.1.10
+
+# --- Utilities ---
+python-dotenv>=1.0.1
+structlog>=24.4.0
+httpx>=0.27.2
+brightdata-sdk>=2.5.0

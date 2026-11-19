@@ -1,0 +1,17 @@
+{
+  "name": "careerai",
+  "version": "1.0.0",
+  "description": "CareerAI — AI-powered career readiness assessment platform for students",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "lint": "npm --prefix frontend run lint",
+    "test:frontend": "npm --prefix frontend test",
+    "test": "npm --prefix frontend test"
+  },
+  "dependencies": {
+    "@neon/config": "^1.4.2",
+    "@neon/env": "^1.3.2"
+  }
+}
